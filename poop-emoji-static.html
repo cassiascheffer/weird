@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spinning Poop Emoji</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100vh;
+            transition: background-color 0.3s ease;
+        }
+        
+        .emoji {
+            font-size: 120px;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .emoji-base {
+            filter: grayscale(100%);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .emoji-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            mix-blend-mode: color;
+            z-index: 2;
+            transition: background 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div id="container" class="container">
+        <div id="emoji" class="emoji">
+            <div class="emoji-base">💩</div>
+            <div id="overlay" class="emoji-overlay"></div>
+        </div>
+    </div>
+
+    <script>
+        // DOM elements
+        const container = document.getElementById('container');
+        const emoji = document.getElementById('emoji');
+        const overlay = document.getElementById('overlay');
+        
+        // Variables for animation
+        let rotation = 0;
+        let hue = 0;
+        
+        // Update rotation
+        function updateRotation() {
+            rotation = (rotation + 1) % 360;
+            emoji.style.transform = `rotate(${rotation}deg)`;
+            requestAnimationFrame(updateRotation);
+        }
+        
+        // Start rotation animation
+        requestAnimationFrame(updateRotation);
+        
+        // Update colors
+        function updateColors() {
+            // Generate random hue
+            hue = Math.floor(Math.random() * 360);
+            
+            // Update emoji color
+            overlay.style.background = `hsl(${hue}, 70%, 50%)`;
+            
+            // Update background color (darker version of same hue)
+            container.style.backgroundColor = `hsl(${hue}, 70%, 20%)`;
+            
+            // Schedule next update
+            setTimeout(updateColors, 1000);
+        }
+        
+        // Start color animation
+        updateColors();
+    </script>
+</body>
+</html>

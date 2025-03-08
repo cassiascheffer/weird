@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JavaScript Code Expander</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f7f9fc;
+    }
+    h1 {
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .container {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .text-box {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .text-box-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .text-box-title {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #34495e;
+    }
+    .line-count {
+      background-color: #e7f0fd;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.9em;
+      color: #3498db;
+    }
+    textarea {
+      width: 100%;
+      height: 400px;
+      padding: 12px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 14px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      resize: vertical;
+      background-color: #fff;
+    }
+    .controls {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+    button:disabled {
+      background-color: #bdc3c7;
+      cursor: not-allowed;
+    }
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .status {
+      text-align: center;
+      height: 20px;
+      margin-top: 10px;
+      color: #7f8c8d;
+    }
+  </style>
+</head>
+<body>
+  <h1>JavaScript Code Expander</h1>
+  
+  <div class="container">
+    <div class="text-box">
+      <div class="text-box-header">
+        <span class="text-box-title">Original Code</span>
+        <span class="line-count" id="original-line-count">0 lines</span>
+      </div>
+      <textarea id="original-code" placeholder="Paste your JavaScript code here..."></textarea>
+    </div>
+    
+    <div class="text-box">
+      <div class="text-box-header">
+        <span class="text-box-title">Expanded Code</span>
+        <span class="line-count" id="expanded-line-count">0 lines</span>
+      </div>
+      <textarea id="expanded-code" readonly placeholder="Expanded code will appear here..."></textarea>
+    </div>
+  </div>
+  
+  <div class="controls">
+    <button id="expand-button" disabled>
+      <span>Expand!</span>
+      <div id="loading-spinner" class="loading" style="display: none;"></div>
+    </button>
+  </div>
+  
+  <div class="status" id="status-message"></div>
+
+  <script>
+    // DOM elements
+    const originalCodeTextarea = document.getElementById('original-code');
+    const expandedCodeTextarea = document.getElementById('expanded-code');
+    const expandButton = document.getElementById('expand-button');
+    const originalLineCount = document.getElementById('original-line-count');
+    const expandedLineCount = document.getElementById('expanded-line-count');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    const statusMessage = document.getElementById('status-message');
+    
+    // Example code to pre-populate the textarea
+    const exampleCode = `// Simple utility functions
+function sum(arr) {
+  let total = 0;
+  for(let i = 0; i < arr.length; i++) {
+    total += arr[i];
+  }
+  return total;
+}
+
+// Find max value in array
+const findMax = arr => {
+  if(arr.length === 0) return null;
+  let max = arr[0];
+  for(let i = 1; i < arr.length; i++) {
+    if(arr[i] > max) max = arr[i];
+  }
+  return max;
+};
+
+// Filter even numbers
+function filterEven(nums) {
+  return nums.filter(n => n % 2 === 0);
+}
+
+// Example usage
+const data = [1, 5, 2, 10, 7];
+console.log("Sum:", sum(data));
+console.log("Max:", findMax(data));
+console.log("Evens:", filterEven(data));`;
+
+    // Set example code and update line count on load
+    originalCodeTextarea.value = exampleCode;
+    updateLineCount(exampleCode, originalLineCount);
+    expandButton.disabled = false;
+
+    // Update line count for original code textarea
+    originalCodeTextarea.addEventListener('input', () => {
+      const code = originalCodeTextarea.value;
+      updateLineCount(code, originalLineCount);
+      expandButton.disabled = code.trim().length === 0;
+    });
+
+    // Function to update line count
+    function updateLineCount(text, element) {
+      const lines = text ? text.split('\n').length : 0;
+      element.textContent = `${lines} line${lines === 1 ? '' : 's'}`;
+    }
+
+    // Expand button click handler
+    expandButton.addEventListener('click', async () => {
+      const originalCode = originalCodeTextarea.value;
+      
+      if (originalCode.trim().length === 0) {
+        return;
+      }
+      
+      // Show loading state
+      expandButton.disabled = true;
+      loadingSpinner.style.display = 'inline-block';
+      statusMessage.textContent = 'Expanding your code...';
+      
+      try {
+        // This is where we would normally call an API that interfaces with Claude
+        // For this demo, we'll implement a basic expansion function locally
+        const expandedCode = await expandCodeLocally(originalCode);
+        
+        // Update expanded code textarea
+        expandedCodeTextarea.value = expandedCode;
+        updateLineCount(expandedCode, expandedLineCount);
+        
+        statusMessage.textContent = 'Code successfully expanded!';
+      } catch (error) {
+        console.error('Error expanding code:', error);
+        statusMessage.textContent = 'Error expanding code. Please try again.';
+      } finally {
+        // Hide loading state
+        loadingSpinner.style.display = 'none';
+        expandButton.disabled = false;
+      }
+    });
+
+    // Function to expand code locally
+    // In a real implementation, this would call a backend API that uses Claude
+    async function expandCodeLocally(code) {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Basic transformations to demonstrate the concept
+      let expanded = code;
+      
+      // Add lengthy comments
+      expanded = expanded.replace(/\/\/(.*)/g, (match, comment) => {
+        return `// ${comment} - This comment provides important context for the following code section.\n// Additional explanation: This helps developers understand the purpose and functionality.`;
+      });
+      
+      // Replace short variable names with longer ones
+      const varReplacements = {
+        'i': 'iterationIndex',
+        'j': 'nestedIterationIndex',
+        'x': 'temporaryVariable',
+        'y': 'secondaryTemporaryVariable',
+        'fn': 'functionReference',
+        'arr': 'arrayOfItems',
+        'obj': 'objectInstance',
+        'val': 'currentValue',
+        'res': 'resultValue',
+        'opts': 'configurationOptions',
+        'cfg': 'configurationSettings',
+        'el': 'currentElement',
+        'evt': 'eventObject',
+        'cb': 'callbackFunction',
+        'e': 'errorObject',
+        'err': 'errorInformation',
+        'temp': 'temporaryStorageVariable',
+        'idx': 'currentIndex',
+        'len': 'collectionLength',
+      };
+      
+      // Replace variables, being careful not to replace parts of words
+      for (const [short, long] of Object.entries(varReplacements)) {
+        const regex = new RegExp(`\\b${short}\\b`, 'g');
+        expanded = expanded.replace(regex, long);
+      }
+      
+      // Add line breaks after curly braces, semicolons, and commas
+      expanded = expanded.replace(/[{;,]/g, match => `${match}\n`);
+      
+      // Add verbose comments at the start of functions
+      expanded = expanded.replace(/function\s+(\w+)\s*\(/g, (match, funcName) => {
+        return `// The following function named ${funcName} is responsible for performing a specific operation\n// It takes parameters that will be processed according to the business logic requirements\n// Note that proper error handling should be implemented for production use\n${match}`;
+      });
+      
+      // Add more line breaks before if, for, while statements
+      expanded = expanded.replace(/(if|for|while)\s*\(/g, '\n\n$1(');
+      
+      // Add verbose comments for return statements
+      expanded = expanded.replace(/return\s/g, '\n// The function will now return a value to the caller\n// This value represents the result of the operation performed by this function\nreturn ');
+      
+      return expanded;
+    }
+  </script>
+</body>
+</html>
