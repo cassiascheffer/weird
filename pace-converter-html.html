@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Running Pace Converter 💩</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Comic Sans MS", cursive;
+      background: linear-gradient(to right, #ef4444, #eab308, #3b82f6);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 400px;
+      background-color: rgba(255, 255, 255, 0.9);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      overflow: hidden;
+      backdrop-filter: blur(4px);
+    }
+
+    .card-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .card-title {
+      margin: 0;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .card-content {
+      padding: 1.5rem;
+    }
+
+    .space-y-6 > * + * {
+      margin-top: 1.5rem;
+    }
+
+    .space-y-4 > * + * {
+      margin-top: 1rem;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .text-lg {
+      font-size: 1.125rem;
+    }
+
+    .font-medium {
+      font-weight: 500;
+    }
+
+    .flex {
+      display: flex;
+    }
+
+    .items-center {
+      align-items: center;
+    }
+
+    .justify-center {
+      justify-content: center;
+    }
+
+    .space-x-2 > * + * {
+      margin-left: 0.5rem;
+    }
+
+    input {
+      width: 80px;
+      padding: 0.5rem;
+      border: 1px solid #d1d5db;
+      border-radius: 0.25rem;
+      text-align: center;
+      font-family: "Comic Sans MS", cursive;
+    }
+
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+
+    button {
+      padding: 0.5rem;
+      border: none;
+      background-color: transparent;
+      border-radius: 9999px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    button:hover {
+      background-color: #f3f4f6;
+    }
+
+    .output {
+      width: 80px;
+      padding: 0.5rem;
+      border: 1px solid #d1d5db;
+      border-radius: 0.25rem;
+      text-align: center;
+      background-color: #f9fafb;
+      font-family: "Comic Sans MS", cursive;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="card-header">
+      <h1 class="card-title">Running Pace Converter 💩</h1>
+    </div>
+    <div class="card-content">
+      <div class="space-y-6">
+        <div class="space-y-4">
+          <div class="text-center text-lg font-medium" id="input-label">
+            Minutes per Mile
+          </div>
+          <div class="flex items-center justify-center space-x-2">
+            <input 
+              type="number" 
+              id="input-minutes" 
+              placeholder="Min" 
+              min="0"
+            >
+            <span class="text-lg">:</span>
+            <input 
+              type="number" 
+              id="input-seconds" 
+              placeholder="Sec" 
+              min="0" 
+              max="59"
+            >
+          </div>
+        </div>
+
+        <div class="flex justify-center">
+          <button id="swap-button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8L22 12L18 16"></path>
+              <path d="M6 16L2 12L6 8"></path>
+              <path d="M2 12H22"></path>
+            </svg>
+          </button>
+        </div>
+
+        <div class="space-y-4">
+          <div class="text-center text-lg font-medium" id="output-label">
+            Minutes per Kilometer
+          </div>
+          <div class="flex items-center justify-center space-x-2">
+            <span class="output" id="output-minutes">-</span>
+            <span class="text-lg">:</span>
+            <span class="output" id="output-seconds">-</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Elements
+      const inputLabel = document.getElementById('input-label');
+      const outputLabel = document.getElementById('output-label');
+      const inputMinutes = document.getElementById('input-minutes');
+      const inputSeconds = document.getElementById('input-seconds');
+      const outputMinutes = document.getElementById('output-minutes');
+      const outputSeconds = document.getElementById('output-seconds');
+      const swapButton = document.getElementById('swap-button');
+
+      // State
+      let isMinPerMile = true;
+      const mileValues = { minutes: '', seconds: '' };
+      const kmValues = { minutes: '', seconds: '' };
+
+      // Convert pace
+      function convertPace(min, sec, toKm) {
+        if (!min && !sec) return { minutes: '', seconds: '' };
+        
+        const totalMinutes = Number(min || 0) + Number(sec || 0) / 60;
+        let convertedMinutes;
+        
+        if (toKm) {
+          // Convert min/mile to min/km
+          convertedMinutes = totalMinutes / 1.60934;
+        } else {
+          // Convert min/km to min/mile
+          convertedMinutes = totalMinutes * 1.60934;
+        }
+        
+        const wholeMinutes = Math.floor(convertedMinutes);
+        const remainingSeconds = Math.round((convertedMinutes - wholeMinutes) * 60);
+        
+        return {
+          minutes: wholeMinutes.toString(),
+          seconds: remainingSeconds.toString().padStart(2, '0')
+        };
+      }
+
+      // Update display
+      function updateDisplay() {
+        const currentValues = isMinPerMile ? mileValues : kmValues;
+        const convertedValues = isMinPerMile ? kmValues : mileValues;
+        
+        inputMinutes.value = currentValues.minutes;
+        inputSeconds.value = currentValues.seconds;
+        
+        outputMinutes.textContent = convertedValues.minutes || '-';
+        outputSeconds.textContent = convertedValues.seconds || '-';
+        
+        inputLabel.textContent = isMinPerMile ? 'Minutes per Mile' : 'Minutes per Kilometer';
+        outputLabel.textContent = isMinPerMile ? 'Minutes per Kilometer' : 'Minutes per Mile';
+      }
+
+      // Handle input change
+      function handleInputChange() {
+        if (isMinPerMile) {
+          mileValues.minutes = inputMinutes.value;
+          mileValues.seconds = inputSeconds.value;
+          
+          if (mileValues.minutes || mileValues.seconds) {
+            const converted = convertPace(mileValues.minutes, mileValues.seconds, true);
+            kmValues.minutes = converted.minutes;
+            kmValues.seconds = converted.seconds;
+          } else {
+            kmValues.minutes = '';
+            kmValues.seconds = '';
+          }
+        } else {
+          kmValues.minutes = inputMinutes.value;
+          kmValues.seconds = inputSeconds.value;
+          
+          if (kmValues.minutes || kmValues.seconds) {
+            const converted = convertPace(kmValues.minutes, kmValues.seconds, false);
+            mileValues.minutes = converted.minutes;
+            mileValues.seconds = converted.seconds;
+          } else {
+            mileValues.minutes = '';
+            mileValues.seconds = '';
+          }
+        }
+        
+        updateDisplay();
+      }
+
+      // Swap units
+      function handleSwap() {
+        isMinPerMile = !isMinPerMile;
+        updateDisplay();
+      }
+
+      // Add event listeners
+      inputMinutes.addEventListener('input', handleInputChange);
+      inputSeconds.addEventListener('input', handleInputChange);
+      swapButton.addEventListener('click', handleSwap);
+
+      // Initialize
+      updateDisplay();
+    });
+  </script>
+</body>
+</html>
