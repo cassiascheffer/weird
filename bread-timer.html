@@ -92,6 +92,7 @@
 <body>
   <div class="container">
     <h1>🍞 Bread Baking Timer</h1>
+    <p style="text-align:center;margin-bottom:15px;color:#aaa;font-size:0.9em">Recipe: <a href="https://food52.com/recipes/83036-overnight-40-percent-whole-wheat-bread-recipe" target="_blank" style="color:#f5d799">Overnight 40% Whole Wheat Bread</a> from Food52</p>
     
     <div class="toggle-row">
       <label class="toggle">
@@ -190,6 +191,7 @@ function formatTime(s) {
 function playBeep(times = 3) {
   if (!document.getElementById('soundToggle').checked) return;
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
   let t = audioCtx.currentTime;
   for (let i = 0; i < times; i++) {
     const osc = audioCtx.createOscillator();
@@ -204,6 +206,14 @@ function playBeep(times = 3) {
     osc.stop(t + i * 0.3 + 0.25);
   }
 }
+
+function initAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+document.addEventListener('click', initAudio, { once: true });
+document.addEventListener('touchstart', initAudio, { once: true });
 
 function showAlert(title, msg) {
   document.getElementById('alertTitle').textContent = title;
